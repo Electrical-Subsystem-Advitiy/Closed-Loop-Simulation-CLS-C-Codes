@@ -71,6 +71,5 @@ int main()
         y[i] = (ned2ecef(x, lat, lon))[i];
     for(int i = 0; i<3; i++)
         cout<<y[i]<<' ';
-    cout<<"Hello world!"<<endl;
     return 0;
 }
