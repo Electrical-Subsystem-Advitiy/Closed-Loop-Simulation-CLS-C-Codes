@@ -1,114 +1,135 @@
 #include<iostream>
 #include<math.h>
-#include<time.h>
-#include<stdexcept>
-#include "constants_1U_cpp.h"
 
 using namespace std;
 
-float radians(float deg)
+class quat
 {
-    float rad = deg*0.0174532925;
-    return rad;
-}
+    public: float arr[4];
+            quat()
+            {
+                for(int i = 0; i<4; i++)
+                    arr[i] = 0;
+            }
+            quat(float arr1[4])
+            {
+                for(int i = 0; i<4; i++)
+                    arr[i] = arr1[i];
+            }
+            quat(const quat &q)
+            {
+                for(int i = 0; i<4; i++)
+                    arr[i] = q.arr[i];
+            }
+            quat operator+(quat &a)
+            {
+                quat temp;
+                for(int i = 0; i<4; i++)
+                    temp.arr[i] = arr[i] + a.arr[i];
+                return temp;
+            }
+            quat operator-(quat &a)
+            {
+                quat temp;
+                for(int i = 0; i<4; i++)
+                    temp.arr[i] = arr[i] - a.arr[i];
+                return temp;
+            }
+            quat quatInv()
+            {
+                quat v_qi;
+                for(int i = 0; i<3; i++)
+                    v_qi.arr[i] = - arr[i];
+                v_qi.arr[3] = arr[3];
+                return v_qi;
+            }
+            float norm()
+            {
+                float res = 0;
+                for(int i = 0; i<4; i++)
+                    res += arr[i]*arr[i];
+                return res;
+            }
+            friend quat quatMultiplyUnnorm(quat v_q1, quat v_q2);
+            friend float* quatRotate (quat a, quat b);
+            friend quat dot (quat a, quat b);
+            friend ostream & operator << (ostream &out, const quat &q);
+            friend istream & operator >> (istream &in,  quat &q);
+};
 
-int sgn(float num)
+quat quatMultiplyUnnorm(quat v_q1, quat v_q2)
 {
-    if(num < 0)
-        return -1;
-    else if(num == 0)
-        return 0;
-    else
-        return 1;
-}
+    float dot(float a[3], float b[3]);
+    float* cross(float a[3], float b[3]);
 
-float* ecif2ecef(float* v_x_i, time_t t)
-{
-    // Input ecif vector and time since epoch in seconds
-	// Output ecef vector
-    time_t ut_sec = (EPOCH - EQUINOX) + t; // universal time vector in sec
-	float theta = w_earth*ut_sec;
-	float m_DCM[3][3] = {{cos(theta), sin(theta), 0.0}, {-1*sin(theta), cos(theta),0.0}, {0.0,0.0,1.0}};
-	static float v_x_e[3];
-	for(int i = 0; i<3; i++)
-	    v_x_e[i] = dot(m_DCM[i],v_x_i);
-	return v_x_e;
-}
+    float a1 = v_q1.arr[3];
+    float a2 = v_q2.arr[3];
 
-void latlon(float* v_x, float &lat, float &lon)
-{
-	// get the latitude and longitude in degrees given position in ECEF
-	// Input: x is position in ecef frame, latitude and longitude variables in degrees (tuple)
-	// latitude ranges [0,90] in north hemisphere and [0,-90] in south hemisphere
-    lat = sgn(v_x[2])*acos(pow((pow(v_x[0], 2) + pow(v_x[1], 2)), 0.5)/(pow(pow(v_x[0], 2) + pow(v_x[1], 2 + pow(v_x[2], 2)), 0.5)))*90.0/(pi/2.0);
-
-    // longitude calculation given position, lon is longitude
-	// ranges from (-pi,pi]
-    if(v_x[1] == 0)
+    float v_b1[3], v_b2[3];
+    for(int i = 0; i<3; i++)
     {
-        if(v_x[0] >= 0)
-            lon = 0.0;
-        else
-            lon = 180.0;
+        v_b1[i] = v_q1.arr[i];
+        v_b2[i] = v_q2.arr[i];
     }
-    else
-        lon = sgn(v_x[1])*acos(v_x[0]/(pow((pow(v_x[0], 2) + pow(v_x[1], 2)), 0.5)))*90.0/(pi/2);
-    // x axis is intersection of 0 longitude and 0 latitude
-}
 
-float* ecef2ecif(float* v_x_e, time_t t)
-{
-    // Input ecef vector and time since epoch in seconds
-	// Output ecif vector
-    time_t ut_sec = (EPOCH - EQUINOX) + t;
-    float theta = w_earth*ut_sec;
-	float DCM[3][3] = {{cos(theta), -1*sin(theta), 0.0}, {sin(theta), cos(theta),0.0}, {0.0,0.0,1.0}};
-	static float v_x_i[3];
-	for(int i = 0; i<3; i++)
-	    v_x_i[i] = dot(DCM[i], v_x_e);
-	return v_x_i;
-}
-
-float* ned2ecef(float* v, float lat, float lon)
-{
-	//  rotate vector from North-East-Down frame to ecef
-	//  Input:
-	//	lat: latittude in degrees ranges from -90 to 90
-	//	lon: longitude in degrees ranges from (-180,180]
-    if(lat==90||lat==-90)
-        throw invalid_argument("Latittude value +/-90 occured. NED frame is not defined at north and south pole !!");
-    float theta = -lat + 90.0;          // in degree, polar angle (co-latitude)
-    float phi;
-    if(lon<0)
-        phi = 360.0 - lon*sgn(lon);
-    else
-        phi = lon;                      // in degree, azimuthal angle
-    theta = radians(theta);
-    phi = radians(phi);
-
-	float m_DCM_n2e[3][3] = {{-1*cos(theta)*cos(phi), -1*sin(phi), -sin(theta)*cos(phi)}, {-1*cos(theta)*sin(phi), cos(phi), -1*sin(theta)*sin(phi)}, {sin(theta), 0.0, -cos(theta)}}; //spherical to cartesian
-	static float y[3];
+    float a = a1*a2 - dot(v_b1, v_b2);
+    float v_b[3];
     for(int i = 0; i<3; i++)
-	    y[i] = dot(m_DCM_n2e[i], v);
-	return y;
+        v_b[i] = a1*v_b2[i] + a2*v_b1[i] - (cross(v_b1, v_b2))[i];
+    float v_qa[4] = {v_b[0], v_b[1], v_b[2], a};
+    quat v_q = quat(v_qa);
+    return v_q;
 }
 
-float* wBIb2wBOb(float v_w_BI_b[3], quat v_q_BO, float v_w_IO_o[3])
+float* quatRotate(quat v_q, float v_x[3])
 {
-// input: angular velocity of body wrt ecif in body frame, unit quaternion which rotates orbit vector to body frame and angular velocity of ecif wrt orbit frame in orbit frame
-// output: angular velocity of body frame wrt orbit frame in body frame
+    float dot(float a[3], float b[3]);
+    if(dot(v_x, v_x) == 0)
+        return v_x;
+    quat v_qi = v_q.quatInv();
+    float v_y1[4] = {v_x[0], v_x[1], v_x[2], 0.0};
+    quat v_y = quat(v_y1);
+    v_y = quatMultiplyUnnorm(v_q, v_y);
+    v_y = quatMultiplyUnnorm(v_y, v_qi);
     static float v[3];
     for(int i = 0; i<3; i++)
-        v[i] = v_w_BI_b[i] - (quatRotate(v_q_BO, v_w_IO_o))[i];
+        v[i] = v_y.arr[i];
     return v;
 }
 
-float* wBOb2wBIb(float v_w_BO_b[3], quat v_q_BO, float v_w_IO_o[3])
+float dot(float a[3], float b[3])
 {
-// input: angular velocity of body wrt orbit in body frame, unit quaternion which rotates orbit vector to body frame and angular velocity of ecif wrt orbit frame in orbit frame
-// output: angular velocity of body frame wrt eci frame in body frame
-    static float v[3];
+    float res = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    return res;
+}
+
+float* cross(float a[3], float b[3])
+{
+    static float res[3];
+    res[0] = a[1]*b[2] - b[1]*a[2];
+    res[1] = a[2]*b[0] - b[2]*a[0];
+    res[2] = a[0]*b[1] - b[0]*a[1];
+    return res;
+}
+
+float norm(float* v_i)
+{
+    float val = 0;
     for(int i = 0; i<3; i++)
-        v[i] = v_w_BO_b[i] - (quatRotate(v_q_BO, v_w_IO_o))[i];
-    return v;
+        val += v_i[i]*v_i[i];
+    val = sqrt(val);
+    return val;
+}
+
+ostream & operator << (ostream &out, const quat &q)
+{
+    out<<q.arr[0]<<' '<<q.arr[1]<<' '<<q.arr[2]<<' '<<q.arr[3]<<endl;
+    return out;
+}
+
+istream & operator >> (istream &in,  quat &q)
+{
+    cout << "Enter the four values of the quaternion: ";
+    in>>q.arr[0]>>q.arr[1]>>q.arr[2]>>q.arr[3];
+    return in;
 }
