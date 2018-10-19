@@ -112,6 +112,15 @@ float* cross(float a[3], float b[3])
     return res;
 }
 
+float norm(float* v_i)
+{
+    float val = 0;
+    for(int i = 0; i<3; i++)
+        val += v_i[i]*v_i[i];
+    val = sqrt(val);
+    return val;
+}
+
 ostream & operator << (ostream &out, const quat &q)
 {
     out<<q.arr[0]<<' '<<q.arr[1]<<' '<<q.arr[2]<<' '<<q.arr[3]<<endl;
