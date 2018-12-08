@@ -34,15 +34,16 @@ float* ecif2ecef(float* v_x_i, time_t t)
 	return v_x_e;
 }
 
-void latlon(float* v_x, float &lat, float &lon)
+float* latlon(float* v_x)
 {
 	// get the latitude and longitude in degrees given position in ECEF
 	// Input: x is position in ecef frame, latitude and longitude variables in degrees (tuple)
 	// latitude ranges [0,90] in north hemisphere and [0,-90] in south hemisphere
-    lat = sgn(v_x[2])*acos(pow((pow(v_x[0], 2) + pow(v_x[1], 2)), 0.5)/(pow(pow(v_x[0], 2) + pow(v_x[1], 2 + pow(v_x[2], 2)), 0.5)))*90.0/(pi/2.0);
+    float lat = sgn(v_x[2])*acos(pow((pow(v_x[0], 2) + pow(v_x[1], 2)), 0.5)/(pow(pow(v_x[0], 2) + pow(v_x[1], 2 + pow(v_x[2], 2)), 0.5)))*90.0/(pi/2.0);
 
     // longitude calculation given position, lon is longitude
 	// ranges from (-pi,pi]
+    float lon;
     if(v_x[1] == 0)
     {
         if(v_x[0] >= 0)
@@ -53,6 +54,8 @@ void latlon(float* v_x, float &lat, float &lon)
     else
         lon = sgn(v_x[1])*acos(v_x[0]/(pow((pow(v_x[0], 2) + pow(v_x[1], 2)), 0.5)))*90.0/(pi/2);
     // x axis is intersection of 0 longitude and 0 latitude
+    static float lattlonn[2] = {lat, lon};
+    return lattlonn;
 }
 
 float* ecef2ecif(float* v_x_e, time_t t)
