@@ -133,3 +133,9 @@ istream & operator >> (istream &in,  quat &q)
     in>>q.arr[0]>>q.arr[1]>>q.arr[2]>>q.arr[3];
     return in;
 }
+
+float radians(float deg)
+{
+    float rad = deg*0.0174532925;
+    return rad;
+}
