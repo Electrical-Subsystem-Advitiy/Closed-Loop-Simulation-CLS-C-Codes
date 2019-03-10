@@ -2,6 +2,8 @@
 
 using namespace std;
 
+double pi = 3.1415926535897932384626433;
+
 class matrix3
 {
     public: float mat[3][3];
@@ -23,7 +25,7 @@ class matrix3
                     for(int j = 0; j<3; j++)
                         mat[i][j] = matrix.mat[i][j];
             }
-            matrix3 operator+(matrix3 &a)
+            matrix3 operator+(matrix3 a)
             {
                 matrix3 temp;
                 for(int i = 0; i<3; i++)
@@ -31,13 +33,25 @@ class matrix3
                         temp.mat[i][j] = mat[i][j] + a.mat[i][j];
                 return temp;
             }
-            matrix3 operator-(matrix3 &a)
+            matrix3 operator*(double a)
+            {
+                matrix3 temp;
+                for(int i = 0; i<3; i++)
+                    for(int j = 0; j<3; j++)
+                        temp.mat[i][j] = mat[i][j] * a;
+                return temp;
+            }
+            matrix3 operator-(matrix3 a)
             {
                 matrix3 temp;
                 for(int i = 0; i<3; i++)
                     for(int j = 0; j<3; j++)
                         temp.mat[i][j] = mat[i][j] - a.mat[i][j];
                 return temp;
+            }
+            float trace()
+            {
+                return (mat[1][1] + mat[2][2] + mat[3][3]);
             }
 };
 
@@ -50,5 +64,14 @@ matrix3 invert_mat(matrix3 a)
     for(int i=0;i<3;i++)
         for(int j=0;j<3;j++)
             b.mat[j][i] = ((a.mat[(i+1)%3][(j+1)%3]*a.mat[(i+2)%3][(j+2)%3])-(a.mat[(i+1)%3][(j+2)%3]*a.mat[(i+2)%3][(j+1)%3])) / det;
+    return b;
+}
+
+matrix3 transpose(matrix3 a)
+{
+    matrix3 b;
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+            b.mat[i][j] = a[j][i];
     return b;
 }
