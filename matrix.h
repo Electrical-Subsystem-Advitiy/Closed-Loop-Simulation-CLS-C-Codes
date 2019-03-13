@@ -49,6 +49,14 @@ class matrix3
                         temp.mat[i][j] = mat[i][j] - a.mat[i][j];
                 return temp;
             }
+            matrix3 operator=(matrix3 a)
+            {
+                matrix3 temp;
+                for(int i = 0; i<3; i++)
+                    for(int j = 0; j<3; j++)
+                        temp.mat[i][j] = a.mat[i][j];
+                return temp;
+            }
             float trace()
             {
                 return (mat[1][1] + mat[2][2] + mat[3][3]);
@@ -72,6 +80,6 @@ matrix3 transpose(matrix3 a)
     matrix3 b;
     for(int i=0;i<3;i++)
         for(int j=0;j<3;j++)
-            b.mat[i][j] = a[j][i];
+            b.mat[i][j] = a.mat[j][i];
     return b;
 }
